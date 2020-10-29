@@ -4,14 +4,19 @@
 mov ax,5       			
 int 10h			 
 
-mov cx, 40 ; length
-mov ax, 103 ; x start
-mov bx, 100 ; y
-call draw_hbar
-mov cx, 40 ; height
-mov ax, 103 ; x
-mov bx, 100 ; y start
-call draw_vbar
+;mov cx, 40 ; length
+;mov ax, 103 ; x start
+;mov bx, 100 ; y
+;call draw_hbar
+;mov cx, 40 ; height
+;mov ax, 103 ; x
+;mov bx, 100 ; y start
+;call draw_vbar
+mov bl, 10
+mov bh, 10
+mov cl, 10 ; dx
+mov ch, 10 ; dy
+call draw_line
 
 xor ax,ax				
 int 16h
@@ -109,5 +114,74 @@ jne h_dot
 pop cx
 ret
 draw_hbar endp
+
+; stack: dy,dx | xf,d | ...
+
+draw_line proc ; bl - x0, bh - y0, cl - dx, ch - dy
+and ax, 0
+add ah, bl
+add ah, cl
+mov dl, ah
+mov al, cl
+shl al, 1
+sub al, cl
+mov ah, dl
+and dl, 0
+push ax ; xf,d0 |xf,d0| ...
+push cx ; dy,dx |dy,dx|xf,d0| ...
+
+and ax, 0
+mov al, bl ; x0
+mov bl, bh ; y0
+and bh, 0
+	dot:
+call draw_dot
+inc ax ; xi
+pop dx ; dy,dx |xf,di-1| ...
+pop cx ; xf,di-1 | ...
+push cx ; |xf,di-1| ...
+cmp al, ch
+je ex
+and cl, 80h
+cmp cl, 0
+je inc_y
+
+pop cx ; xf,di-1 | ...
+push dx
+and dl, 0
+shl dh, 1 ; 2*dy
+add cl, dh ; di
+pop dx ; dy,dx
+push cx ; |xf,di| ...
+push dx ; |dy,dx|xf,di| ...
+and dx, 0
+and cx, 0
+jmp dot
+	inc_y:
+inc bx ; yi
+and cx, 0
+mov cl, dh
+sub cl, dl
+shl cl, 1 ; 2(dy-dx)
+mov bh, al ; bx: xiyi
+and ax, 0
+pop ax ; xf,di-1 | ...
+add al, cl ; xf,di
+push ax ; |xf,di| ...
+and ax, 0
+mov al, bh
+and bh, 0
+push dx ; |dy,dx|xf,di| ...
+and dx, 0
+and cx, 0
+jmp dot
+	ex:
+pop ax
+and ax, 0
+and bx, 0
+and cx, 0
+and dx, 0
+ret
+draw_line endp
 
 end
