@@ -28,6 +28,9 @@ mov cl, -5
 mov ch, 24
 call steep_line
 
+mov dx, 0
+call fill_area
+
 
 xor ax,ax				
 int 16h
@@ -111,13 +114,13 @@ pop cx
 ret
 draw_vbar endp
 
-draw_hbar proc ; ax - x, bx - y, cx - height
+draw_hbar proc ; ax - x, bx - y, cx - length
 push cx
 and cx, 0
 	h_dot:
 call draw_dot
 pop cx
-dec cx ; height countdown
+dec cx ; length countdown
 inc ax ; next x
 push cx
 cmp cx, 0
@@ -432,5 +435,28 @@ and cx, 0
 and dx, 0
 ret
 draw_half endp
+
+fill_area proc
+mov cx, 23
+mov bx, 29
+mov ax, 19
+	next_line:
+inc ax
+inc bx
+sub cx, 2
+push cx
+push bx
+push ax
+call draw_hbar
+pop ax
+pop bx
+pop cx
+cmp bx, 34
+jne next_line
+and ax, 0
+and bx, 0
+and cx, 0
+ret
+fill_area endp
 
 end
