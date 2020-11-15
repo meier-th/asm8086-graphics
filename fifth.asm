@@ -4,24 +4,30 @@
 mov ax,5       			
 int 10h			
 
-mov cx, 40 ; length
-mov ax, 103 ; x start
-mov bx, 100 ; y
-call draw_hbar
-mov cx, 40 ; height
-mov ax, 103 ; x
-mov bx, 100 ; y start
-call draw_vbar
-mov bl, 10
-mov bh, 20
-mov cl, 10
-mov ch, 5
-call draw_line
-mov bl, 10
-mov bh, 20
-mov cl, 7 ; dx
-mov ch, 20 ; dy
+mov al, -1
+mov bl, 15
+mov cl, 30
+mov dl, 20
+call draw_half
+
+mov al, 0
+mov bl, 15
+mov cl, 53
+mov dl, 20
+call draw_quarter
+
+mov bl, 24
+mov bh, 5
+mov cl, -5
+mov ch, 24
 call steep_line
+
+mov bl, 47
+mov bh, 5
+mov cl, -5
+mov ch, 24
+call steep_line
+
 
 xor ax,ax				
 int 16h
@@ -310,5 +316,121 @@ and dx, 0
 ret
 steep_line endp
 
+draw_quarter proc ; al - x, bl - y, cl - x_offset, dl - y_offset
+push cx
+push dx
+mov cx, 0
+mov dx, 0
+	iteration:
+inc al
+add dx, ax
+cmp dl, bl
+jl draw_c_dot
+sub dl, bl
+dec bl
+	draw_c_dot:
+pop cx
+mov dh, cl
+pop cx
+push cx
+sub cl, al
+push ax
+mov al, cl ; offset - x
+add bl, dh ; y + offset
+mov cl, dh
+push cx
+and cx, 0
+and dh, 0
+
+push dx
+and dx, 0
+call draw_dot
+pop dx
+
+pop cx
+mov dh, cl
+pop cx
+mov al, cl ; x
+sub bl, dh ; y
+mov cl, dh
+push cx
+and cx, 0
+and dh, 0
+
+cmp al, bl
+jge end_circle
+jmp iteration
+    end_circle:
+pop dx
+pop cx
+and cx, 0
+and dx, 0
+ret
+draw_quarter endp
+
+draw_half proc ; al - x, bl - y, cl - x_offset, dl - y_offset
+push cx
+push dx
+mov cx, 0
+mov dx, 0
+	h_iteration:
+inc al
+add dx, ax
+cmp dl, bl
+jl h_draw_c_dot
+sub dl, bl
+dec bl
+	h_draw_c_dot:
+pop cx ; y offset
+mov dh, cl
+pop cx ; x offset
+push cx ; x offset
+sub cl, al
+push ax ; x
+mov al, cl ; offset - x
+add bl, dh ; y + offset
+mov cl, dh
+push cx ; y offset
+and cx, 0
+and dh, 0
+
+push dx
+and dx, 0
+call draw_dot
+pop dx
+pop cx
+mov dh, cl
+pop cx
+add al, cl
+add al, cl
+push cx
+mov cl, dh
+push cx
+and cx, 0
+and dh, 0
+push dx
+call draw_dot
+pop dx
+
+pop cx
+mov dh, cl
+pop cx
+mov al, cl ; x
+sub bl, dh ; y
+mov cl, dh
+push cx
+and cx, 0
+and dh, 0
+
+cmp al, bl
+jge h_end_circle
+jmp h_iteration
+    h_end_circle:
+pop dx
+pop cx
+and cx, 0
+and dx, 0
+ret
+draw_half endp
 
 end
